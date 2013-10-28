@@ -4,33 +4,40 @@ parameters:
     liuggio_stats_d_client.collector.user.class: Liuggio\StatsDClientBundle\StatsCollector\UserStatsCollector
     liuggio_stats_d_client.collector.exception.class: Liuggio\StatsDClientBundle\StatsCollector\ExceptionStatsCollector
     liuggio_stats_d_client.collector.time.class: Liuggio\StatsDClientBundle\StatsCollector\TimeStatsCollector
-
+    liuggio_stats_d_client.collector.dbal.class: Liuggio\StatsDClientBundle\StatsCollector\DbalStatsCollector
+    liuggio_stats_d_client.collector.solarium.class: Liuggio\StatsDClientBundle\StatsCollector\SolariumStatsCollector
 
 services:
-    liuggio_stats_d_client.collector.visitor:
-        class: %liuggio_stats_d_client.collector.visitor.class%
+    liuggio_stats_d_client.collector.base:
+        class: Liuggio\StatsDClientBundle\StatsCollector\StatsCollector
+        abstract: true
         calls:
             - ['setOnlyOnMasterResponse', [true]]
+            - ['setStatsdDataFactory', [@liuggio_stats_d_client.factory]]
+
+    liuggio_stats_d_client.collector.visitor:
+        class: %liuggio_stats_d_client.collector.visitor.class%
+        parent: liuggio_stats_d_client.collector.base
         tags:
             - { name: stats_d_collector}
 
     liuggio_stats_d_client.collector.memory:
         class: %liuggio_stats_d_client.collector.memory.class%
-        calls:
-            - ['setOnlyOnMasterResponse', [true]]
+        parent: liuggio_stats_d_client.collector.base
         tags:
             - { name: stats_d_collector}
 
     liuggio_stats_d_client.collector.user:
         class: %liuggio_stats_d_client.collector.user.class%
+        parent: liuggio_stats_d_client.collector.base
         calls:
             - ['setSecurityContext', [@security.context]]
-            - ['setOnlyOnMasterResponse', [true]]
         tags:
             - { name: stats_d_collector}
 
     liuggio_stats_d_client.collector.exception:
         class: %liuggio_stats_d_client.collector.exception.class%
+        parent: liuggio_stats_d_client.collector.base
         calls:
             - ['setOnlyOnMasterResponse', [false]]
         tags:
@@ -38,16 +45,20 @@ services:
 
     liuggio_stats_d_client.collector.time:
         class: %liuggio_stats_d_client.collector.time.class%
-        calls:
-            - ['setOnlyOnMasterResponse', [true]]
+        parent: liuggio_stats_d_client.collector.base
+        tags:
+            - { name: stats_d_collector}
+
+    liuggio_stats_d_client.collector.solarium:
+        class: %liuggio_stats_d_client.collector.solarium.class%
+        parent: liuggio_stats_d_client.collector.base
         tags:
             - { name: stats_d_collector}
 
 #special connector dbal is also a sqllogger
     liuggio_stats_d_client.collector.dbal:
         class: %liuggio_stats_d_client.collector.dbal.class%
+        parent: liuggio_stats_d_client.collector.base
         arguments: ['query']
-        calls:
-            - ['setOnlyOnMasterResponse', [true]]
         tags:
             - { name: stats_d_collector}

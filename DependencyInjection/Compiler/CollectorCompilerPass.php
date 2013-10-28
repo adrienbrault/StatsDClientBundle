@@ -27,21 +27,37 @@ class CollectorCompilerPass implements CompilerPassInterface
 
             foreach ($container->findTaggedServiceIds('stats_d_collector') as $id => $attributes) {
                 //only if there's on the parameter means that is enable
-                if (isset($collectorsEnabled[$id])) {
-                    // setterInjection
-                    $collectorReference = new Reference($id);
-                    $collectorDefinition = $container->getDefinition($id);
-                    $collectorDefinition->addMethodCall('setStatsdDataFactory', array(new Reference('liuggio_stats_d_client.factory')));
-                    $collectorDefinition->addMethodCall('setStatsDataKey', array($collectorsEnabled[$id]));
-                    // adding to this collector the the collection
-                    $serviceDefinition->addMethodCall('add', array($collectorReference));
-                    // if is doctrine.dbal
-                    // we need to attach also the collector to the dbal sql logger chain
-                    if ($id === 'liuggio_stats_d_client.collector.dbal') {
-                        $chainLogger = $container->getDefinition('doctrine.dbal.logger.chain');
-                        if (null !== $chainLogger) {
-                            $chainLogger->addMethodCall('addLogger', array($collectorReference));
+                if (!isset($collectorsEnabled[$id])) {
+                    continue;
+                }
+
+                $collectorReference = new Reference($id);
+
+                // adding to this collector the the collection
+                $serviceDefinition->addMethodCall('add', array($collectorReference));
+
+                $collectorDefinition = $container->getDefinition($id);
+                $collectorDefinition->addMethodCall('setStatsDataKey', array($collectorsEnabled[$id]));
+
+                // if is doctrine.dbal
+                // we need to attach also the collector to the dbal sql logger chain
+                if ($id === 'liuggio_stats_d_client.collector.dbal') {
+                    $chainLogger = $container->getDefinition('doctrine.dbal.logger.chain');
+                    if (null !== $chainLogger) {
+                        $chainLogger->addMethodCall('addLogger', array($collectorReference));
+                    }
+                } elseif ($id === 'liuggio_stats_d_client.collector.solarium') {
+                    foreach ($container->getDefinitions() as $definitionId => $definition) {
+                        if (!preg_match('/^solarium.client.[^.]+$/', $definitionId)) {
+                            continue;
                         }
+
+                        $definition
+                            ->addMethodCall(
+                                'registerPlugin',
+                                array('liuggio_stats_d_client', $collectorReference)
+                            )
+                        ;
                     }
                 }
             }
