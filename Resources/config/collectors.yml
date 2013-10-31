@@ -1,64 +1,36 @@
 parameters:
-    liuggio_stats_d_client.collector.visitor.class: Liuggio\StatsDClientBundle\StatsCollector\VisitorStatsCollector
-    liuggio_stats_d_client.collector.memory.class: Liuggio\StatsDClientBundle\StatsCollector\MemoryStatsCollector
-    liuggio_stats_d_client.collector.user.class: Liuggio\StatsDClientBundle\StatsCollector\UserStatsCollector
-    liuggio_stats_d_client.collector.exception.class: Liuggio\StatsDClientBundle\StatsCollector\ExceptionStatsCollector
-    liuggio_stats_d_client.collector.time.class: Liuggio\StatsDClientBundle\StatsCollector\TimeStatsCollector
-    liuggio_stats_d_client.collector.dbal.class: Liuggio\StatsDClientBundle\StatsCollector\DbalStatsCollector
-    liuggio_stats_d_client.collector.solarium.class: Liuggio\StatsDClientBundle\StatsCollector\SolariumStatsCollector
+    liuggio_stats_d_client.collector.increment.class: AdrienBrault\StatsDCollector\Collector\IncrementCollector
+    liuggio_stats_d_client.collector.memory.class: AdrienBrault\StatsDCollector\Collector\MemoryCollector
+    liuggio_stats_d_client.collector.time.class: AdrienBrault\StatsDCollector\Collector\TimeCollector
+    liuggio_stats_d_client.collector.exception.class: AdrienBrault\StatsDCollector\Collector\ExceptionCollector
+    liuggio_stats_d_client.collector.doctrine.class: AdrienBrault\StatsDCollector\Collector\DoctrineDbalCollector
+    liuggio_stats_d_client.collector.solarium.class: AdrienBrault\StatsDCollector\Collector\SolariumCollector
 
 services:
-    liuggio_stats_d_client.collector.base:
-        class: Liuggio\StatsDClientBundle\StatsCollector\StatsCollector
+    liuggio_stats_d_client.collector.increment:
+        class: %liuggio_stats_d_client.collector.increment.class%
         abstract: true
-        calls:
-            - ['setOnlyOnMasterResponse', [true]]
-            - ['setStatsdDataFactory', [@liuggio_stats_d_client.factory]]
-
-    liuggio_stats_d_client.collector.visitor:
-        class: %liuggio_stats_d_client.collector.visitor.class%
-        parent: liuggio_stats_d_client.collector.base
-        tags:
-            - { name: stats_d_collector}
 
     liuggio_stats_d_client.collector.memory:
         class: %liuggio_stats_d_client.collector.memory.class%
-        parent: liuggio_stats_d_client.collector.base
-        tags:
-            - { name: stats_d_collector}
-
-    liuggio_stats_d_client.collector.user:
-        class: %liuggio_stats_d_client.collector.user.class%
-        parent: liuggio_stats_d_client.collector.base
-        calls:
-            - ['setSecurityContext', [@security.context]]
-        tags:
-            - { name: stats_d_collector}
-
-    liuggio_stats_d_client.collector.exception:
-        class: %liuggio_stats_d_client.collector.exception.class%
-        parent: liuggio_stats_d_client.collector.base
-        calls:
-            - ['setOnlyOnMasterResponse', [false]]
-        tags:
-            - { name: stats_d_collector}
+        abstract: true
 
     liuggio_stats_d_client.collector.time:
         class: %liuggio_stats_d_client.collector.time.class%
-        parent: liuggio_stats_d_client.collector.base
-        tags:
-            - { name: stats_d_collector}
+        abstract: true
 
+    liuggio_stats_d_client.collector.exception:
+        class: %liuggio_stats_d_client.collector.exception.class%
+        abstract: true
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
+    # TODO
+    liuggio_stats_d_client.collector.doctrine:
+        class: %liuggio_stats_d_client.collector.doctrine.class%
+        abstract: true
+
+    # TODO
     liuggio_stats_d_client.collector.solarium:
         class: %liuggio_stats_d_client.collector.solarium.class%
-        parent: liuggio_stats_d_client.collector.base
-        tags:
-            - { name: stats_d_collector}
-
-#special connector dbal is also a sqllogger
-    liuggio_stats_d_client.collector.dbal:
-        class: %liuggio_stats_d_client.collector.dbal.class%
-        parent: liuggio_stats_d_client.collector.base
-        arguments: ['query']
-        tags:
-            - { name: stats_d_collector}
+        abstract: true

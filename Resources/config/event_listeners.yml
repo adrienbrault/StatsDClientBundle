@@ -1,0 +1,8 @@
+parameters:
+    liuggio_stats_d_client.event_listener.response.class: Liuggio\StatsDClientBundle\EventListener\ResponseListener
+
+services:
+    liuggio_stats_d_client.event_listener.response:
+        class: %liuggio_stats_d_client.event_listener.response.class%
+        tags:
+            - { name: kernel.event_subscriber }

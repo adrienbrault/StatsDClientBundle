@@ -48,7 +48,8 @@ class LiuggioStatsDClientExtensionTest extends \PHPUnit_Framework_TestCase
                 'enable' => true,
                 'prefix' => 'log',
                 'formatter' => array(),
-                'level' => 'warning')
+                'level' => 'warning'
+            )
         );
     }
 

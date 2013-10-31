@@ -1,0 +1,20 @@
+parameters:
+    liuggio_stats_d_client.provider.request.class: AdrienBrault\StatsDCollector\Provider\SymfonyRequestProvider
+    liuggio_stats_d_client.provider.response.class: AdrienBrault\StatsDCollector\Provider\SymfonyResponseProvider
+    liuggio_stats_d_client.provider.user.class: AdrienBrault\StatsDCollector\Provider\SymfonyUserProvider
+
+services:
+    liuggio_stats_d_client.provider.request:
+        class: %liuggio_stats_d_client.provider.request.class%
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    liuggio_stats_d_client.provider.response:
+        class: %liuggio_stats_d_client.provider.response.class%
+        tags:
+            - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+
+    liuggio_stats_d_client.provider.user:
+        class: %liuggio_stats_d_client.provider.user.class%
+        arguments:
+            - @?security.context
